@@ -1,12 +1,11 @@
-import type { Config } from "tailwindcss";
-
+/** @type {import('tailwindcss').Config} */
 export default {
 	darkMode: ["class"],
 	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
+		"./pages/**/*.{js,jsx}",
+		"./components/**/*.{js,jsx}",
+		"./app/**/*.{js,jsx}",
+		"./src/**/*.{js,jsx}",
 	],
 	prefix: "",
 	theme: {
@@ -61,8 +60,19 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
-			},
+				},
+				wood: {
+					light: '#D2B48C',      // Tan
+					DEFAULT: '#8B4513',    // SaddleBrown 
+					dark: '#5D4037',       // Brown
+					mahogany: '#A52A2A',   // Mahogany
+					oak: '#D4A76A',        // Oak
+					walnut: '#654321',     // Walnut
+					cherry: '#C4A484',     // Cherry
+					ebony: '#3D2B1F',      // Ebony
+					pine: '#DEB887',       // Pine
+					cedar: '#A0522D',      // Cedar
+				},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
