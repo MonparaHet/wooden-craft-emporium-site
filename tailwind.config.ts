@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 export default {
 	darkMode: ["class"],
@@ -73,6 +74,7 @@ export default {
 					pine: '#DEB887',       // Pine
 					cedar: '#A0522D',      // Cedar
 				},
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
@@ -103,4 +105,4 @@ export default {
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+}
