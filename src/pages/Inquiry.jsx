@@ -1,359 +1,220 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Send, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from '../components/ui/sonner';
 
 const Inquiry = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const productFromQuery = queryParams.get('product');
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    company: '',
-    product: productFromQuery || '',
+    productType: '',
     quantity: '',
-    description: '',
-    preferredContactMethod: 'email'
+    specifications: '',
+    message: ''
   });
-
-  const [errors, setErrors] = useState({});
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  useEffect(() => {
-    if (productFromQuery) {
-      setFormData(prev => ({
-        ...prev,
-        product: productFromQuery
-      }));
-    }
-  }, [productFromQuery]);
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9+\-\s()]{10,15}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number is invalid';
-    }
-    
-    if (!formData.product.trim()) newErrors.product = 'Product is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
     setIsSubmitting(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Form submitted:', formData);
-      setSubmitSuccess(true);
+      const response = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
       
-      // Reset form after 3 seconds
-      setTimeout(() => {
+      if (response.ok) {
+        toast.success('Your inquiry has been submitted successfully!');
         setFormData({
           name: '',
           email: '',
           phone: '',
-          company: '',
-          product: '',
+          productType: '',
           quantity: '',
-          description: '',
-          preferredContactMethod: 'email'
+          specifications: '',
+          message: ''
         });
-        setSubmitSuccess(false);
-      }, 3000);
+      } else {
+        throw new Error('Failed to submit inquiry');
+      }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error submitting inquiry:', error);
+      toast.error('Failed to submit inquiry. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Product options
-  const productOptions = [
-    { value: '', label: 'Select a product' },
-    { value: 'Wooden Boxes', label: 'Wooden Boxes' },
-    { value: 'Wooden Pallets', label: 'Wooden Pallets' },
-    { value: 'Wooden Crates', label: 'Wooden Crates' },
-    { value: 'Custom Woodwork', label: 'Custom Woodwork' }
+  
+  const productTypes = [
+    'Wooden Boxes',
+    'Wooden Pallets',
+    'Decorative Boxes',
+    'Custom Solutions',
+    'Other'
   ];
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Product Inquiry</h1>
-        <p className="text-muted-foreground mt-2">
-          Fill out the form below to inquire about our wooden products
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Product Inquiry</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          Interested in our products? Fill out the form below, and our team will get back to you with more information.
         </p>
       </div>
-
-      <div className="card-wooden p-6">
-        {submitSuccess ? (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-              <Check size={32} className="text-green-600" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Inquiry Submitted Successfully!</h2>
-            <p className="text-muted-foreground">
-              Thank you for your interest in our products. We will get back to you shortly.
-            </p>
-          </div>
-        ) : (
+      
+      <div className="max-w-3xl mx-auto">
+        <div className="card-wooden p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
-                  Name <span className="text-destructive">*</span>
+                  Full Name*
                 </label>
                 <input
+                  type="text"
                   id="name"
                   name="name"
-                  type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${
-                    errors.name ? 'border-destructive' : 'border-input'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background`}
+                  required
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name}</p>}
               </div>
-
-              {/* Email */}
+              
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
-                  Email <span className="text-destructive">*</span>
+                  Email Address*
                 </label>
                 <input
+                  type="email"
                   id="email"
                   name="email"
-                  type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${
-                    errors.email ? 'border-destructive' : 'border-input'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background`}
+                  required
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                {errors.email && <p className="mt-1 text-sm text-destructive">{errors.email}</p>}
               </div>
-
-              {/* Phone */}
+              
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1">
-                  Phone <span className="text-destructive">*</span>
+                  Phone Number
                 </label>
                 <input
+                  type="tel"
                   id="phone"
                   name="phone"
-                  type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${
-                    errors.phone ? 'border-destructive' : 'border-input'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background`}
-                />
-                {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone}</p>}
-              </div>
-
-              {/* Company */}
-              <div>
-                <label htmlFor="company" className="block text-sm font-medium text-foreground mb-1">
-                  Company
-                </label>
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  value={formData.company}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-
-              {/* Product */}
+              
               <div>
-                <label htmlFor="product" className="block text-sm font-medium text-foreground mb-1">
-                  Product <span className="text-destructive">*</span>
+                <label htmlFor="productType" className="block text-sm font-medium text-foreground mb-1">
+                  Product Type*
                 </label>
                 <select
-                  id="product"
-                  name="product"
-                  value={formData.product}
+                  id="productType"
+                  name="productType"
+                  value={formData.productType}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${
-                    errors.product ? 'border-destructive' : 'border-input'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background`}
+                  required
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  {productOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                  <option value="">Select Product Type</option>
+                  {productTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
-                {errors.product && <p className="mt-1 text-sm text-destructive">{errors.product}</p>}
               </div>
-
-              {/* Quantity */}
+              
               <div>
                 <label htmlFor="quantity" className="block text-sm font-medium text-foreground mb-1">
                   Quantity
                 </label>
                 <input
+                  type="number"
                   id="quantity"
                   name="quantity"
-                  type="text"
                   value={formData.quantity}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background"
-                  placeholder="e.g., 10 units, 100 pcs"
+                  min="1"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="specifications" className="block text-sm font-medium text-foreground mb-1">
+                  Dimensions/Specifications
+                </label>
+                <input
+                  type="text"
+                  id="specifications"
+                  name="specifications"
+                  value={formData.specifications}
+                  onChange={handleChange}
+                  placeholder="e.g., 10x10x5 inches"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
-
-            {/* Description */}
+            
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
-                Description <span className="text-destructive">*</span>
+              <label htmlFor="message" className="block text-sm font-medium text-foreground mb-1">
+                Additional Details
               </label>
               <textarea
-                id="description"
-                name="description"
-                rows={4}
-                value={formData.description}
+                id="message"
+                name="message"
+                value={formData.message}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  errors.description ? 'border-destructive' : 'border-input'
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-background`}
-                placeholder="Please provide details about your requirements..."
-              />
-              {errors.description && <p className="mt-1 text-sm text-destructive">{errors.description}</p>}
+                rows="4"
+                className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Please provide any additional details or requirements..."
+              ></textarea>
             </div>
-
-            {/* Preferred Contact Method */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Preferred Contact Method
-              </label>
-              <div className="flex space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="preferredContactMethod"
-                    value="email"
-                    checked={formData.preferredContactMethod === 'email'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-wood-dark focus:ring-wood-dark"
-                  />
-                  <span className="ml-2 text-sm">Email</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="preferredContactMethod"
-                    value="phone"
-                    checked={formData.preferredContactMethod === 'phone'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-wood-dark focus:ring-wood-dark"
-                  />
-                  <span className="ml-2 text-sm">Phone</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="preferredContactMethod"
-                    value="whatsapp"
-                    checked={formData.preferredContactMethod === 'whatsapp'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-wood-dark focus:ring-wood-dark"
-                  />
-                  <span className="ml-2 text-sm">WhatsApp</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Submit Button */}
+            
             <div className="flex justify-center">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-wooden px-6 py-3 flex items-center justify-center min-w-[200px]"
+                className="btn-wooden px-8 py-3"
               >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting...
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <Send size={18} className="mr-2" />
-                    Submit Inquiry
-                  </span>
-                )}
+                {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
               </button>
             </div>
           </form>
-        )}
-      </div>
-
-      <div className="mt-8 bg-muted p-6 rounded-lg">
-        <h2 className="text-xl font-semibold mb-3">Why Choose Bapa Sitaram Wooden Box?</h2>
-        <ul className="space-y-2">
-          <li className="flex items-start">
-            <Check size={20} className="text-wood-dark mr-2 mt-0.5" />
-            <span>Premium quality wooden products crafted with attention to detail</span>
-          </li>
-          <li className="flex items-start">
-            <Check size={20} className="text-wood-dark mr-2 mt-0.5" />
-            <span>Customization options to meet your specific requirements</span>
-          </li>
-          <li className="flex items-start">
-            <Check size={20} className="text-wood-dark mr-2 mt-0.5" />
-            <span>Competitive pricing with bulk order discounts</span>
-          </li>
-          <li className="flex items-start">
-            <Check size={20} className="text-wood-dark mr-2 mt-0.5" />
-            <span>Fast production and delivery timelines</span>
-          </li>
-        </ul>
+        </div>
+        
+        <div className="mt-12 text-center">
+          <h2 className="text-2xl font-bold mb-4">Contact Us Directly</h2>
+          <div className="flex flex-col md:flex-row justify-center gap-8 mt-6">
+            <div className="flex items-center justify-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-wood" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span>+91 98765 43210</span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-wood" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>info@bapasitaramboxes.com</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,98 +1,67 @@
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
-
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check for stored token on initialization
+    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedUser && token) {
-      setCurrentUser(JSON.parse(storedUser));
+    
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
     }
+    
     setLoading(false);
-  }, [token]);
+  }, []);
 
-  // Save token to localStorage whenever it changes
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-  }, [token]);
-
-  const login = async (email, password) => {
+  const login = async (credentials) => {
     try {
-      // In a real app, this would be an API call
-      // Simulating API call for now
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Basic validation
-          if (email === 'admin@example.com' && password === 'password') {
-            const user = { 
-              id: '1', 
-              email, 
-              name: 'Admin User',
-              role: 'admin'
-            };
-            const newToken = 'fake-jwt-token-' + Math.random().toString(36).substring(2);
-            setToken(newToken);
-            setCurrentUser(user);
-            localStorage.setItem('user', JSON.stringify(user));
-            resolve(user);
-          } else if (email && password) {
-            const user = { 
-              id: '2', 
-              email, 
-              name: 'Regular User',
-              role: 'user'
-            };
-            const newToken = 'fake-jwt-token-' + Math.random().toString(36).substring(2);
-            setToken(newToken);
-            setCurrentUser(user);
-            localStorage.setItem('user', JSON.stringify(user));
-            resolve(user);
-          } else {
-            reject(new Error('Invalid credentials'));
-          }
-        }, 1000);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
       });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || 'Login failed' };
+      }
     } catch (error) {
-      throw error;
+      console.error('Login error:', error);
+      return { success: false, message: 'An error occurred during login' };
     }
   };
 
   const logout = () => {
-    setToken(null);
-    setCurrentUser(null);
-    localStorage.removeItem('user');
     localStorage.removeItem('token');
-  };
-
-  const isAdmin = () => {
-    return currentUser?.role === 'admin';
-  };
-
-  const value = {
-    currentUser,
-    login,
-    logout,
-    isAdmin,
-    token
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
