@@ -3,9 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { currentUser, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
 
-  if (!currentUser) {
+  if (!user) {
     return <Navigate to="/" replace />;
   }
 

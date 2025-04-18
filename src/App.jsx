@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 
 // Page imports
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Inquiry from "./pages/Inquiry";
@@ -53,6 +54,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route element={<Layout />}>
                   <Route path="/home" element={<Home />} />
                   <Route path="/products" element={<Products />} />
