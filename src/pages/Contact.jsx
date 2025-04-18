@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { toast } from '../components/ui/sonner';
+import { useAuth } from '../contexts/AuthContext';
 
 const Contact = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: user?.name || '',
+    email: user?.email || '',
     subject: '',
     message: ''
   });
@@ -22,10 +24,14 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      // Get token for authorization
+      const token = localStorage.getItem('token');
+      
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -33,17 +39,18 @@ const Contact = () => {
       if (response.ok) {
         toast.success('Your message has been sent successfully!');
         setFormData({
-          name: '',
-          email: '',
+          name: user?.name || '',
+          email: user?.email || '',
           subject: '',
           message: ''
         });
       } else {
-        throw new Error('Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again later.');
+      toast.error(error.message || 'Failed to send message. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }

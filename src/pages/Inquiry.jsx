@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { toast } from '../components/ui/sonner';
+import { useAuth } from '../contexts/AuthContext';
 
 const Inquiry = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: user?.name || '',
+    email: user?.email || '',
     phone: '',
     productType: '',
     quantity: '',
@@ -25,10 +27,14 @@ const Inquiry = () => {
     setIsSubmitting(true);
     
     try {
+      // Get token for authorization
+      const token = localStorage.getItem('token');
+      
       const response = await fetch('/api/inquiries', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -36,8 +42,8 @@ const Inquiry = () => {
       if (response.ok) {
         toast.success('Your inquiry has been submitted successfully!');
         setFormData({
-          name: '',
-          email: '',
+          name: user?.name || '',
+          email: user?.email || '',
           phone: '',
           productType: '',
           quantity: '',
@@ -45,11 +51,12 @@ const Inquiry = () => {
           message: ''
         });
       } else {
-        throw new Error('Failed to submit inquiry');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit inquiry');
       }
     } catch (error) {
       console.error('Error submitting inquiry:', error);
-      toast.error('Failed to submit inquiry. Please try again later.');
+      toast.error(error.message || 'Failed to submit inquiry. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }

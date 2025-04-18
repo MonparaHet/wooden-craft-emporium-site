@@ -87,9 +87,6 @@ const Login = () => {
               Sign up
             </Link>
           </p>
-          <p className="text-sm text-muted-foreground">
-            Demo credentials: admin@example.com / password
-          </p>
         </div>
       </div>
     </div>
