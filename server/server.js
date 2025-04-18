@@ -22,9 +22,11 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || "mongodb+srv://jayb:jayb.inso@123@cluster0.l1uubgk.mongodb.net/")
+// Connect to MongoDB
+mongoose.connect('mongodb+srv://jayb:jayb.inso%40123@cluster0.l1uubgk.mongodb.net/?retryWrites=true&w=majority')
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
+
 
 // API routes
 app.use('/api/products', productRoutes);
